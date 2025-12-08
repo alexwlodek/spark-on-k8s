@@ -1,0 +1,98 @@
+################################################################################
+# Terraform
+################################################################################
+
+# Local .terraform directories
+**/.terraform/
+**/.terraform/*
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.tfstate.lock.info
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Sensitive variable files
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+
+################################################################################
+# Kubernetes / EKS
+################################################################################
+
+# kubeconfig files
+kubeconfig
+kubeconfig.*
+.kube/
+.kube/config
+
+# Generated manifests / templates
+*.generated.yaml
+
+################################################################################
+# Credentials / Secrets
+################################################################################
+
+# AWS credentials
+.aws/
+credentials
+config
+
+# Local env files
+.env
+.env.*
+.env.local
+*.secret
+*.key
+*.pem
+*.p12
+*.jks
+
+################################################################################
+# IDE / Editors
+################################################################################
+
+# VSCode
+.vscode/
+.history/
+*.code-workspace
+
+# IntelliJ / IDEA
+.idea/
+*.iml
+
+# General ignores
+*~
+*.tmp
+*.log
+logs/
+.DS_Store
+
+################################################################################
+# Python (jeśli będzie Spark job w repo)
+################################################################################
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env/
+venv/
+.venv/
+
+################################################################################
+# Docker
+################################################################################
+**/docker-cache/
+**/build/
