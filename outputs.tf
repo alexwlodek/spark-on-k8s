@@ -1,3 +1,7 @@
+###########################################
+####################VPC####################
+###########################################
+
 output "vpc_id" {
   description = "ID of the created VPC."
   value       = module.network.vpc_id
@@ -12,6 +16,10 @@ output "public_subnet_ids" {
   description = "IDs of public subnets."
   value       = module.network.public_subnet_ids
 }
+
+###########################################
+####################EKS####################
+###########################################
 
 output "eks_cluster_name" {
   description = "EKS cluster name."
@@ -37,6 +45,18 @@ output "spark_irsa_role_arn" {
   description = "IAM role ARN used by Spark via IRSA."
   value       = module.iam.spark_irsa_role_arn
 }
+
+
+output "spark_jobs_ecr_url" {
+  description = "ECR repo URL for Spark jobs"
+  value       = module.ecr_spark_jobs.repository_url
+}
+
+###########################################
+####################S3####################
+###########################################
+
+
 
 output "results_bucket_name" {
   description = "Name of the S3 bucket for Spark results."

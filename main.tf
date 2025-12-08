@@ -59,6 +59,24 @@ module "iam" {
 }
 
 
+module "ecr_spark_jobs" {
+  source = "./modules/ecr"
+
+  repository_name = "spark-on-k8s-jobs-${var.env}"
+
+  scan_on_push = true
+  encryption_type = "KMS"
+  kms_key_arn = ""  # zostaw puste jeśli chcesz użyć AWS-managed KMS key
+
+  lifecycle_policy_enabled = true
+  lifecycle_policy_days    = 30
+
+  tags = {
+    Env     = var.env
+    Stack   = "spark-on-k8s"
+    Type    = "ecr"
+  }
+}
 
 
 
@@ -87,7 +105,7 @@ module "ci_jenkins" {
   admin_password = "admin123!"
 
   # Na początek bez dysku trwałego, żeby było prościej
-  enable_persistence = true
+  enable_persistence = false
 
   # Zapewniamy, że EKS i IAM są gotowe przed Jenkins
   depends_on = [
@@ -111,9 +129,3 @@ module "spark_helm" {
 }
 
 
-
-
-
-# Przyszłość: Spark Operator via Helm + Spark jobs
-# module "spark_helm" { ... }
-# module "spark_job"  { ... }
