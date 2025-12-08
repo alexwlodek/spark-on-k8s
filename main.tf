@@ -48,17 +48,19 @@ module "storage" {
 module "iam" {
   source = "./modules/iam"
 
-  role_name = "${local.name_prefix}-spark-irsa"
-
+  role_name           = "${local.name_prefix}-spark-irsa"
   oidc_provider_arn   = module.eks.oidc_provider_arn
-  oidc_issuer_url     = module.eks.cluster_oidc_issuer_url
+  oidc_provider_url   = module.eks.cluster_oidc_issuer_url
   k8s_namespace       = var.spark_namespace
   k8s_service_account = var.spark_service_account_name
-
-  results_bucket_arn = module.storage.results_bucket_arn
-
-  tags = local.common_tags
+  results_bucket_arn  = module.storage.results_bucket_arn
+  eks_cluster_arn     = module.eks.cluster_arn
+  tags                = local.common_tags
 }
+
+
+
+
 
 module "k8s_spark" {
   source = "./modules/k8s_spark"
@@ -75,13 +77,24 @@ module "ci_jenkins" {
   source = "./modules/ci_jenkins"
 
   jenkins_ci_role_arn = module.iam.jenkins_ci_role_arn
-  admin_username      = "admin"
-  admin_password      = "admin123!" # na POC, potem do SSM/Secrets Manager
 
-  depends_on = [module.eks]
+  # Namespace i nazwa release'u – możesz zmienić, jeśli chcesz
+  namespace    = "ci"
+  release_name = "jenkins"
+
+  # Tymczasowe hasło – później przeniesiemy do SSM/Secrets
+  admin_username = "admin"
+  admin_password = "admin123!"
+
+  # Na początek bez dysku trwałego, żeby było prościej
+  enable_persistence = true
+
+  # Zapewniamy, że EKS i IAM są gotowe przed Jenkins
+  depends_on = [
+    module.eks,
+    module.iam
+  ]
 }
-
-
 
 
 module "spark_helm" {
@@ -96,6 +109,9 @@ module "spark_helm" {
     module.k8s_spark
   ]
 }
+
+
+
 
 
 # Przyszłość: Spark Operator via Helm + Spark jobs

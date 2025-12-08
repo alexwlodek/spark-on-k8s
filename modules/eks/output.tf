@@ -22,3 +22,12 @@ output "oidc_provider_arn" {
   description = "ARN of the OIDC provider if IRSA is enabled."
   value       = module.eks.oidc_provider_arn
 }
+
+output "oidc_provider_url" {
+  value       = module.eks.oidc_provider
+}
+
+output "cluster_arn" {
+  description = "ARN of the EKS cluster"
+  value       = module.eks.cluster_arn
+}

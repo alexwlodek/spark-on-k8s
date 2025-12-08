@@ -1,5 +1,5 @@
 variable "role_name" {
-  description = "Name of the IAM role for Spark IRSA."
+  description = "Name of the IAM role used by Spark via IRSA."
   type        = string
 }
 
@@ -8,13 +8,13 @@ variable "oidc_provider_arn" {
   type        = string
 }
 
-variable "oidc_issuer_url" {
+variable "oidc_provider_url" {
   description = "Issuer URL of the EKS OIDC provider."
   type        = string
 }
 
 variable "k8s_namespace" {
-  description = "Kubernetes namespace where the service account exists."
+  description = "Kubernetes namespace where Spark runs."
   type        = string
 }
 
@@ -28,8 +28,19 @@ variable "results_bucket_arn" {
   type        = string
 }
 
+variable "eks_cluster_arn" {
+  description = "ARN of the EKS cluster (for Jenkins CI role)."
+  type        = string
+}
+
 variable "tags" {
   description = "Common tags."
   type        = map(string)
   default     = {}
+}
+
+variable "environment" {
+  description = "Name of Jenkins environment"
+  type        = string
+  default     = "dev"
 }

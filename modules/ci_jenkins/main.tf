@@ -4,30 +4,22 @@ resource "kubernetes_namespace" "ci" {
   }
 }
 
-# SA z IRSA dla Jenkinsa
-resource "kubernetes_service_account" "jenkins" {
-  metadata {
-    name      = "jenkins"
-    namespace = kubernetes_namespace.ci.metadata[0].name
-
-    annotations = {
-      "eks.amazonaws.com/role-arn" = var.jenkins_ci_role_arn
-    }
-  }
-}
 
 resource "helm_release" "jenkins" {
-  name       = var.release_name
-  namespace  = kubernetes_namespace.ci.metadata[0].name
+  name      = var.release_name
+  namespace = kubernetes_namespace.ci.metadata[0].name
+
   repository = "https://charts.jenkins.io"
   chart      = "jenkins"
 
-  # Nie tworzymy własnego SA – używamy tego z IRSA
   values = [
     yamlencode({
       controller = {
-        adminUser     = var.admin_username
-        adminPassword = var.admin_password
+        admin = {
+          username     = var.admin_username
+          password     = var.admin_password
+          createSecret = true
+        }
 
         serviceType = var.service_type
 
@@ -42,9 +34,13 @@ resource "helm_release" "jenkins" {
           }
         }
 
+        # <<< KLUCZOWA CZĘŚĆ: SA + IRSA >>>
         serviceAccount = {
-          create = false
-          name   = kubernetes_service_account.jenkins.metadata[0].name
+          create = true
+          name   = "jenkins"
+          annotations = {
+            "eks.amazonaws.com/role-arn" = var.jenkins_ci_role_arn
+          }
         }
       }
 
@@ -54,5 +50,8 @@ resource "helm_release" "jenkins" {
     })
   ]
 
-  depends_on = [kubernetes_service_account.jenkins]
+  depends_on = [
+    kubernetes_namespace.ci
+  ]
 }
+

@@ -13,10 +13,10 @@ data "aws_iam_policy_document" "irsa_assume_role" {
     condition {
       test     = "StringEquals"
       # issuer URL bez https://, np. oidc.eks.<region>.amazonaws.com/id/XXXX
-      variable = "${replace(var.oidc_issuer_url, "https://", "")}:sub"
-      values = [
-        "system:serviceaccount:${var.k8s_namespace}:${var.k8s_service_account}"
-      ]
+      variable = "${replace(var.oidc_provider_url, "https://", "")}:sub"
+values = [
+  "system:serviceaccount:${var.k8s_namespace}:${var.k8s_service_account}"
+]
     }
   }
 }
@@ -83,13 +83,12 @@ resource "aws_iam_role" "jenkins_ci" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = aws_iam_openid_connect_provider.eks.arn
+          Federated = var.oidc_provider_arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
-            # dopasuj do SA: namespace "ci", name "jenkins"
-            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:ci:jenkins"
+            "${replace(var.oidc_provider_url, "https://", "")}:sub" = "system:serviceaccount:ci:jenkins"
           }
         }
       }
@@ -119,21 +118,21 @@ resource "aws_iam_policy" "jenkins_ci" {
         ]
         Resource = "*"
       },
-      # EKS – pobranie kubeconfiga
+      # EKS – potrzebne do aws eks update-kubeconfig
       {
         Effect = "Allow"
         Action = [
           "eks:DescribeCluster"
         ]
-        Resource = module.eks.cluster_arn
+        Resource = var.eks_cluster_arn
       },
-      # (opcjonalnie) S3 do odczytu/zapisu artefaktów
+      # S3 – wyniki / artefakty (ten sam bucket co Spark jobs)
       {
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
         Resource = [
-          module.storage.results_bucket_arn,
-          "${module.storage.results_bucket_arn}/*"
+          var.results_bucket_arn,
+          "${var.results_bucket_arn}/*"
         ]
       }
     ]
@@ -149,3 +148,4 @@ output "jenkins_ci_role_arn" {
   value       = aws_iam_role.jenkins_ci.arn
   description = "IAM role used by Jenkins via IRSA"
 }
+
