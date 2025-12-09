@@ -1,0 +1,51 @@
+controller:
+  installPlugins:
+    - kubernetes
+    - kubernetes-credentials
+    - workflow-aggregator
+    - git
+    - git-client
+    - configuration-as-code
+    - github
+    - github-branch-source
+    - docker-workflow
+
+  JCasC:
+    enabled: true
+    defaultConfig: true
+    configScripts:
+      kubernetes-cloud: |-
+        jenkins:
+          clouds:
+            - kubernetes:
+                name: "kubernetes"
+                serverUrl: "https://kubernetes.default.svc"
+                namespace: "ci"
+                jenkinsUrl: "http://jenkins.ci.svc.cluster.local:8080"
+                jenkinsTunnel: "jenkins-agent.ci.svc.cluster.local:50000"
+                containerCapStr: "10"
+                templates:
+                  - name: "spark-builder"
+                    label: "spark-builder"
+                    namespace: "ci"
+                    serviceAccount: "jenkins"
+                    nodeUsageMode: NORMAL
+                    idleMinutes: 5
+                    workspaceVolume:
+                      emptyDirWorkspaceVolume:
+                        memory: false
+                    containers:
+                      - name: "jnlp"
+                        image: "jenkins/inbound-agent:alpine-jdk17"
+                        args: "${computer.jnlpmac} ${computer.name}"
+                        ttyEnabled: true
+                      - name: "kaniko"
+                        image: "gcr.io/kaniko-project/executor:debug"
+                        command: "/busybox/sh"
+                        args: "-c 'sleep 999999'"
+                        ttyEnabled: true
+                        # zamiast resources: {limits/requests}
+                        resourceLimitCpu: "500m"
+                        resourceLimitMemory: "1Gi"
+                        resourceRequestCpu: "250m"
+                        resourceRequestMemory: "512Mi"

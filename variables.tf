@@ -49,13 +49,13 @@ variable "worker_min_size" {
 variable "worker_max_size" {
   description = "Max size of the worker node group."
   type        = number
-  default     = 3
+  default     = 1
 }
 
 variable "worker_desired_size" {
   description = "Desired size of the worker node group."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "spark_namespace" {

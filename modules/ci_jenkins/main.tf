@@ -4,15 +4,17 @@ resource "kubernetes_namespace" "ci" {
   }
 }
 
-
 resource "helm_release" "jenkins" {
   name      = var.release_name
   namespace = kubernetes_namespace.ci.metadata[0].name
 
   repository = "https://charts.jenkins.io"
   chart      = "jenkins"
+  # optionalnie: version = "5.8.110"
 
   values = [
+    file("${path.module}/values.yaml"),
+
     yamlencode({
       controller = {
         admin = {
@@ -21,7 +23,8 @@ resource "helm_release" "jenkins" {
           createSecret = true
         }
 
-        serviceType = var.service_type
+        serviceType  = var.service_type
+        numExecutors = 0
 
         resources = {
           requests = {
@@ -33,14 +36,15 @@ resource "helm_release" "jenkins" {
             memory = "1Gi"
           }
         }
+      }
 
-        # <<< KLUCZOWA CZĘŚĆ: SA + IRSA >>>
-        serviceAccount = {
-          create = true
-          name   = "jenkins"
-          annotations = {
-            "eks.amazonaws.com/role-arn" = var.jenkins_ci_role_arn
-          }
+      # <<< KLUCZOWA CZĘŚĆ >>>
+      serviceAccount = {
+        # domyślnie i tak jest true, ale jawnie ustawmy
+        create                        = true
+        automountServiceAccountToken  = true
+        annotations = {
+          "eks.amazonaws.com/role-arn" = var.jenkins_ci_role_arn
         }
       }
 
@@ -51,7 +55,6 @@ resource "helm_release" "jenkins" {
   ]
 
   depends_on = [
-    kubernetes_namespace.ci
+    kubernetes_namespace.ci,
   ]
 }
-

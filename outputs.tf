@@ -67,3 +67,10 @@ output "results_bucket_arn" {
   description = "ARN of the S3 bucket for Spark results."
   value       = module.storage.results_bucket_arn
 }
+
+
+output "ecr_repository_name"{
+  description = "Name of the ECR repository"
+  value       = module.ecr_spark_jobs.repository_name
+}
+
