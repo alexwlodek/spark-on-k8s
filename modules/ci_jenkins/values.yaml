@@ -39,13 +39,23 @@ controller:
                         image: "jenkins/inbound-agent:alpine-jdk17"
                         args: "${computer.jnlpmac} ${computer.name}"
                         ttyEnabled: true
+
                       - name: "kaniko"
                         image: "gcr.io/kaniko-project/executor:debug"
                         command: "/busybox/sh"
                         args: "-c 'sleep 999999'"
                         ttyEnabled: true
-                        # zamiast resources: {limits/requests}
                         resourceLimitCpu: "500m"
                         resourceLimitMemory: "1Gi"
                         resourceRequestCpu: "250m"
                         resourceRequestMemory: "512Mi"
+
+                      - name: "kubectl"
+                        image: "dtzar/helm-kubectl:latest"
+                        command: "sleep"
+                        args: "999999"
+                        ttyEnabled: true
+                        resourceLimitCpu: "200m"
+                        resourceLimitMemory: "256Mi"
+                        resourceRequestCpu: "100m"
+                        resourceRequestMemory: "128Mi"

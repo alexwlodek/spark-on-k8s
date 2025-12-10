@@ -58,3 +58,46 @@ resource "helm_release" "jenkins" {
     kubernetes_namespace.ci,
   ]
 }
+
+
+resource "kubernetes_role" "jenkins_spark_role" {
+  metadata {
+    name      = "${var.release_name}-spark-role"
+    namespace = "spark"
+  }
+
+  rule {
+    api_groups = ["sparkoperator.k8s.io"]
+    resources  = ["sparkapplications", "sparkapplications/status"]
+    verbs      = ["create", "get", "list", "watch", "delete", "update", "patch"]
+  }
+
+    depends_on = [
+    kubernetes_namespace.ci,
+  ]
+}
+
+resource "kubernetes_role_binding" "jenkins_spark_rbac" {
+  metadata {
+    name      = "${var.release_name}-spark-rb"
+    namespace = "spark"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = kubernetes_role.jenkins_spark_role.metadata[0].name
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = var.release_name
+    namespace = kubernetes_namespace.ci.metadata[0].name
+  }
+
+
+    depends_on = [
+    kubernetes_namespace.ci,
+    kubernetes_role.jenkins_spark_role,
+  ]
+}

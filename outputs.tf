@@ -1,23 +1,4 @@
 ###########################################
-####################VPC####################
-###########################################
-
-output "vpc_id" {
-  description = "ID of the created VPC."
-  value       = module.network.vpc_id
-}
-
-output "private_subnet_ids" {
-  description = "IDs of private subnets."
-  value       = module.network.private_subnet_ids
-}
-
-output "public_subnet_ids" {
-  description = "IDs of public subnets."
-  value       = module.network.public_subnet_ids
-}
-
-###########################################
 ####################EKS####################
 ###########################################
 
@@ -31,10 +12,6 @@ output "eks_cluster_endpoint" {
   value       = module.eks.cluster_endpoint
 }
 
-output "eks_cluster_ca_certificate" {
-  description = "EKS cluster CA certificate (base64)."
-  value       = module.eks.cluster_ca_certificate
-}
 
 output "eks_oidc_provider_arn" {
   description = "ARN of the OIDC provider associated with the EKS cluster."

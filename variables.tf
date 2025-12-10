@@ -37,7 +37,7 @@ variable "cluster_version" {
 variable "worker_instance_type" {
   description = "Instance type for EKS managed node group."
   type        = string
-  default     = "t3.small"
+  default     = "t3.medium"
 }
 
 variable "worker_min_size" {
