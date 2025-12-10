@@ -1,4 +1,5 @@
 controller:
+  # Instalacja pluginów
   installPlugins:
     - kubernetes
     - kubernetes-credentials
@@ -9,7 +10,9 @@ controller:
     - github
     - github-branch-source
     - docker-workflow
+    - job-dsl
 
+  # Konfiguracja JCasC
   JCasC:
     enabled: true
     defaultConfig: true
@@ -20,15 +23,15 @@ controller:
             - kubernetes:
                 name: "kubernetes"
                 serverUrl: "https://kubernetes.default.svc"
-                namespace: "ci"
-                jenkinsUrl: "http://jenkins.ci.svc.cluster.local:8080"
-                jenkinsTunnel: "jenkins-agent.ci.svc.cluster.local:50000"
+                namespace: "${namespace}"
+                jenkinsUrl: "http://${release_name}.${namespace}.svc.cluster.local:8080"
+                jenkinsTunnel: "${release_name}-agent.${namespace}.svc.cluster.local:50000"
                 containerCapStr: "10"
                 templates:
                   - name: "spark-builder"
                     label: "spark-builder"
-                    namespace: "ci"
-                    serviceAccount: "jenkins"
+                    namespace: "${namespace}"
+                    serviceAccount: "${release_name}"
                     nodeUsageMode: NORMAL
                     idleMinutes: 5
                     workspaceVolume:
@@ -37,13 +40,13 @@ controller:
                     containers:
                       - name: "jnlp"
                         image: "jenkins/inbound-agent:alpine-jdk17"
-                        args: "${computer.jnlpmac} ${computer.name}"
+                        args: "$${computer.jnlpmac} $${computer.name}"
                         ttyEnabled: true
 
                       - name: "kaniko"
                         image: "gcr.io/kaniko-project/executor:debug"
                         command: "/busybox/sh"
-                        args: "-c 'sleep 999999'"
+                        args: "-c cat" 
                         ttyEnabled: true
                         resourceLimitCpu: "500m"
                         resourceLimitMemory: "1Gi"
@@ -53,9 +56,38 @@ controller:
                       - name: "kubectl"
                         image: "dtzar/helm-kubectl:latest"
                         command: "sleep"
-                        args: "999999"
+                        args: "infinity"
                         ttyEnabled: true
                         resourceLimitCpu: "200m"
                         resourceLimitMemory: "256Mi"
-                        resourceRequestCpu: "100m"
-                        resourceRequestMemory: "128Mi"
+
+      github-credentials: |-
+        credentials:
+          system:
+            domainCredentials:
+              - credentials:
+                  - string:
+                      scope: GLOBAL
+                      id: "github-token"
+                      description: "GitHub token for spark-on-k8s-jobs"
+                      secret: "$${GITHUB_TOKEN}"
+
+      spark-main-pipeline: |-
+        jobs:
+          - script: >
+              pipelineJob('spark-main') {
+                definition {
+                  cpsScm {
+                    scm {
+                      git {
+                        remote{
+                          url('https://github.com/alexwlodek/spark-on-k8s-jobs.git')
+                          credentials('github-token')
+                        }
+                        branches('*/main')
+                      }
+                    }
+                    scriptPath('Jenkinsfile')
+                  }
+                }
+              }

@@ -20,15 +20,16 @@ resource "aws_ecr_repository" "this" {
   encryption_configuration {
     encryption_type = local.ecr_encryption_configuration.encryption_type
 
-    # Jeżeli podasz własny KMS key, zostanie użyty.
-    # Jeśli kms_key_arn = "" i encryption_type=KMS, AWS użyje domyślnego klucza zarządzanego.
+
     kms_key = local.ecr_encryption_configuration.kms_key
   }
 
+  force_delete = true
+ 
   tags = var.tags
 }
 
-# Opcjonalna polityka lifecycle – czyści stare, nietagowane obrazy
+
 resource "aws_ecr_lifecycle_policy" "this" {
   count      = var.lifecycle_policy_enabled ? 1 : 0
   repository = aws_ecr_repository.this.name

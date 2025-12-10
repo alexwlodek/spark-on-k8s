@@ -87,3 +87,18 @@ variable "results_bucket_lifecycle_days" {
   type        = number
   default     = 30
 }
+
+variable "github_token" {
+  type      = string
+  sensitive = true
+}
+
+variable "jenkins_user" {
+  description = "Jenkins Admin username"
+  type = string
+}
+
+variable "jenkins_password" {
+  description = "Jenkins Admin password"
+  type = string
+}

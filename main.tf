@@ -66,16 +66,12 @@ module "ecr_spark_jobs" {
 
   scan_on_push = true
   encryption_type = "KMS"
-  kms_key_arn = ""  # zostaw puste jeśli chcesz użyć AWS-managed KMS key
+  kms_key_arn = ""  
 
   lifecycle_policy_enabled = true
   lifecycle_policy_days    = 30
 
-  tags = {
-    Env     = var.env
-    Stack   = "spark-on-k8s"
-    Type    = "ecr"
-  }
+   tags = local.common_tags
 }
 
 
@@ -87,6 +83,7 @@ module "k8s_spark" {
   spark_irsa_role_arn      = module.iam.spark_irsa_role_arn
   spark_operator_namespace = "spark-operator"
   spark_operator_sa_name   = "spark-operator-controller"
+  
 
   depends_on = [module.eks]
 }
@@ -96,18 +93,20 @@ module "ci_jenkins" {
 
   jenkins_ci_role_arn = module.iam.jenkins_ci_role_arn
 
-  # Namespace i nazwa release'u – możesz zmienić, jeśli chcesz
+ 
   namespace    = "ci"
   release_name = "jenkins"
 
-  # Tymczasowe hasło – później przeniesiemy do SSM/Secrets
-  admin_username = "admin"
-  admin_password = "admin123!"
+ 
+  jenkins_user = var.jenkins_user
+  jenkins_password = var.jenkins_password
 
-  # Na początek bez dysku trwałego, żeby było prościej
+  
   enable_persistence = false
 
-  # Zapewniamy, że EKS i IAM są gotowe przed Jenkins
+  github_token = var.github_token
+  
+  
   depends_on = [
     module.eks,
     module.iam

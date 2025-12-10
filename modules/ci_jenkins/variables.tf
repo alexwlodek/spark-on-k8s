@@ -21,13 +21,13 @@ variable "service_type" {
   default     = "LoadBalancer"
 }
 
-variable "admin_username" {
+variable "jenkins_user" {
   description = "Initial Jenkins admin username"
   type        = string
   default     = "admin"
 }
 
-variable "admin_password" {
+variable "jenkins_password" {
   description = "Initial Jenkins admin password"
   type        = string
   sensitive   = true
@@ -37,4 +37,9 @@ variable "enable_persistence" {
   description = "Enable Jenkins persistence (PVC)"
   type        = bool
   default     = false
+}
+
+variable "github_token" {
+  type      = string
+  sensitive = true
 }
