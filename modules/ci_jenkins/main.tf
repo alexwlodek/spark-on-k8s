@@ -4,66 +4,69 @@ resource "kubernetes_namespace" "ci" {
   }
 }
 
+locals {
+  controller_env = concat([
+    {
+      name  = "GITHUB_TOKEN"
+      value = var.github_token
+    },
+  ], var.extra_controller_env)
+
+  controller_block = {
+    admin = {
+      username     = var.jenkins_user
+      password     = var.jenkins_password
+      createSecret = true
+    }
+
+    serviceType  = var.service_type
+    numExecutors = var.controller_num_executors
+    resources    = var.controller_resources
+    env          = local.controller_env
+  }
+
+  controller_values = var.controller_image_tag != null ? merge(local.controller_block, {
+    image = { tag = var.controller_image_tag }
+  }) : local.controller_block
+
+  persistence_block = var.enable_persistence ? merge({
+    enabled = true
+  }, var.persistence_storage_class != null ? {
+    storageClass = var.persistence_storage_class
+  } : {}) : {
+    enabled = false
+  }
+
+  base_values = {
+    controller = local.controller_values
+    serviceAccount = {
+      create                       = true
+      name                         = var.release_name # Upewniamy się, że nazwa SA jest spójna
+      automountServiceAccountToken = true
+      annotations = merge({
+        "eks.amazonaws.com/role-arn" = var.jenkins_ci_role_arn
+      }, var.service_account_annotations)
+    }
+    persistence = local.persistence_block
+  }
+
+  merged_values = merge(local.base_values, var.values_override)
+}
+
 resource "helm_release" "jenkins" {
   name       = var.release_name
   namespace  = kubernetes_namespace.ci.metadata[0].name
-  repository = "https://charts.jenkins.io"
-  chart      = "jenkins"
-  # version    = "5.8.110" # Warto przypiąć wersję dla stabilności
+  repository = var.chart_repository
+  chart      = var.chart_name
+  version    = var.chart_version
 
   values = [
-    # 1. Wczytujemy szablon values i podstawiamy zmienne z Terraform
     templatefile("${path.module}/jenkins-values.tftpl", {
       namespace    = kubernetes_namespace.ci.metadata[0].name
       release_name = var.release_name
     }),
 
-    # 2. Nadpisujemy specyficzną konfigurację (Admin, Zasoby, ServiceAccount, ENV)
-    yamlencode({
-      controller = {
-        admin = {
-          username     = var.jenkins_user
-          password     = var.jenkins_password
-          createSecret = true
-        }
-
-        serviceType  = var.service_type
-        numExecutors = 0
-
-        resources = {
-          requests = {
-            cpu    = "200m"
-            memory = "512Mi"
-          }
-          limits = {
-            cpu    = "500m"
-            memory = "1Gi"
-          }
-        }
-
-        # Wstrzyknięcie tokena jako zmienna środowiskowa do Controllera
-        # JCasC (z pliku powyżej) odczyta to jako ${GITHUB_TOKEN}
-        env = [
-          {
-            name  = "GITHUB_TOKEN"
-            value = var.github_token
-          }
-        ]
-      }
-
-      serviceAccount = {
-        create                       = true
-        name                         = var.release_name # Upewniamy się, że nazwa SA jest spójna
-        automountServiceAccountToken = true
-        annotations = {
-          "eks.amazonaws.com/role-arn" = var.jenkins_ci_role_arn
-        }
-      }
-
-      persistence = {
-        enabled = var.enable_persistence
-      }
-    })
+    yamlencode(local.merged_values)
   ]
 
   depends_on = [
@@ -71,11 +74,10 @@ resource "helm_release" "jenkins" {
   ]
 }
 
-# --- RBAC dla Sparka (Bez zmian, wygląda poprawnie) ---
 resource "kubernetes_role" "jenkins_spark_role" {
   metadata {
     name      = "${var.release_name}-spark-role"
-    namespace = "spark"
+    namespace = var.spark_namespace
   }
   rule {
     api_groups = ["sparkoperator.k8s.io"]
@@ -87,7 +89,7 @@ resource "kubernetes_role" "jenkins_spark_role" {
 resource "kubernetes_role_binding" "jenkins_spark_rbac" {
   metadata {
     name      = "${var.release_name}-spark-rb"
-    namespace = "spark"
+    namespace = var.spark_namespace
   }
   role_ref {
     api_group = "rbac.authorization.k8s.io"
