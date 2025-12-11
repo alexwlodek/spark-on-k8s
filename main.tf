@@ -117,8 +117,6 @@ module "ci_jenkins" {
 module "spark_helm" {
   source = "./modules/spark_helm"
 
-  release_name         = "spark-operator"
-  namespace            = "spark-operator"
   spark_job_namespaces = [module.k8s_spark.namespace]
 
   depends_on = [
