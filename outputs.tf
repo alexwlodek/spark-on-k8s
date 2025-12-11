@@ -26,7 +26,7 @@ output "spark_irsa_role_arn" {
 
 output "spark_jobs_ecr_url" {
   description = "ECR repo URL for Spark jobs"
-  value       = module.ecr_spark_jobs.repository_url
+  value       = module.ecr.repository_url
 }
 
 ###########################################
@@ -48,6 +48,6 @@ output "results_bucket_arn" {
 
 output "ecr_repository_name"{
   description = "Name of the ECR repository"
-  value       = module.ecr_spark_jobs.repository_name
+  value       = module.ecr.repository_name
 }
 

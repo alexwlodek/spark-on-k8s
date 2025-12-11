@@ -70,6 +70,20 @@ variable "spark_service_account_name" {
   default     = "spark-sa"
 }
 
+variable "spark_operator_namespace" {
+  description = "Namespace where the Spark Operator components are installed."
+  type        = string
+  default     = "spark-operator"
+}
+
+variable "spark_operator_service_account_name" {
+  description = "Service account name used by the Spark Operator controller."
+  type        = string
+  default     = "spark-operator-controller"
+}
+
+
+
 variable "results_bucket_name" {
   description = "Name of the S3 bucket for Spark results. Must be globally unique."
   type        = string
@@ -137,4 +151,22 @@ variable "jenkins_user" {
 variable "jenkins_password" {
   description = "Jenkins Admin password"
   type = string
+}
+
+variable "jenkins_namespace" {
+  description = "Kubernetes namespace for the Jenkins deployment."
+  type        = string
+  default     = "ci"
+}
+
+variable "jenkins_release_name" {
+  description = "Helm release name used for the Jenkins chart."
+  type        = string
+  default     = "jenkins"
+}
+
+variable "jenkins_enable_persistence" {
+  description = "Toggle persistence for the Jenkins controller."
+  type        = bool
+  default     = false
 }

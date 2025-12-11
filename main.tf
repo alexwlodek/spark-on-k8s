@@ -60,7 +60,7 @@ module "iam" {
 }
 
 
-module "ecr_spark_jobs" {
+module "ecr" {
   source = "./modules/ecr"
 
   repository_name = local.ecr_repository_name
@@ -80,30 +80,30 @@ module "ecr_spark_jobs" {
 module "k8s_spark" {
   source = "./modules/k8s_spark"
 
-  spark_namespace_name     = "spark"
+  spark_namespace_name     = var.spark_namespace
   spark_irsa_role_arn      = module.iam.spark_irsa_role_arn
-  spark_operator_namespace = "spark-operator"
-  spark_operator_sa_name   = "spark-operator-controller"
+  spark_operator_namespace = var.spark_operator_namespace
+  spark_operator_sa_name   = var.spark_operator_service_account_name
   
 
   depends_on = [module.eks]
 }
 
 module "ci_jenkins" {
-  source = "./modules/ci_jenkins"
+  source = "./modules/jenkins_helm"
 
   jenkins_ci_role_arn = module.iam.jenkins_ci_role_arn
 
  
-  namespace    = "ci"
-  release_name = "jenkins"
+  namespace    = var.jenkins_namespace
+  release_name = var.jenkins_release_name
 
  
   jenkins_user = var.jenkins_user
   jenkins_password = var.jenkins_password
 
   
-  enable_persistence = false
+  enable_persistence = var.jenkins_enable_persistence
 
   github_token = var.github_token
   
