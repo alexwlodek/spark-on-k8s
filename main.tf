@@ -5,6 +5,7 @@ locals {
     Project     = "spark-on-eks"
     ManagedBy   = "terraform"
   }
+  ecr_repository_name = coalesce(var.ecr_repository_name, "spark-on-k8s-jobs-${var.env}")
 }
 
 module "network" {
@@ -62,16 +63,16 @@ module "iam" {
 module "ecr_spark_jobs" {
   source = "./modules/ecr"
 
-  repository_name = "spark-on-k8s-jobs-${var.env}"
+  repository_name = local.ecr_repository_name
 
-  scan_on_push = true
-  encryption_type = "KMS"
-  kms_key_arn = ""  
+  scan_on_push     = var.ecr_scan_on_push
+  encryption_type  = var.ecr_encryption_type
+  kms_key_arn      = var.ecr_kms_key_arn
 
-  lifecycle_policy_enabled = true
-  lifecycle_policy_days    = 30
+  lifecycle_policy_enabled = var.ecr_lifecycle_policy_enabled
+  lifecycle_policy_days    = var.ecr_lifecycle_policy_days
 
-   tags = local.common_tags
+  tags = local.common_tags
 }
 
 

@@ -88,6 +88,42 @@ variable "results_bucket_lifecycle_days" {
   default     = 30
 }
 
+variable "ecr_repository_name" {
+  description = "Optional override for the Spark jobs ECR repository name (without account/region prefix)."
+  type        = string
+  default     = null
+}
+
+variable "ecr_scan_on_push" {
+  description = "Enable image scanning on push for the Spark jobs ECR repository."
+  type        = bool
+  default     = true
+}
+
+variable "ecr_encryption_type" {
+  description = "ECR encryption type for Spark images: KMS or AES256."
+  type        = string
+  default     = "KMS"
+}
+
+variable "ecr_kms_key_arn" {
+  description = "Optional KMS key ARN for ECR encryption. Required if encryption type is KMS and a customer-managed key is desired."
+  type        = string
+  default     = ""
+}
+
+variable "ecr_lifecycle_policy_enabled" {
+  description = "Whether to attach a lifecycle policy to the Spark jobs ECR repository."
+  type        = bool
+  default     = true
+}
+
+variable "ecr_lifecycle_policy_days" {
+  description = "Number of days to retain untagged images in the Spark jobs ECR repository."
+  type        = number
+  default     = 30
+}
+
 variable "github_token" {
   type      = string
   sensitive = true

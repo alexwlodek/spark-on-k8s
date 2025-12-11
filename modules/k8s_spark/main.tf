@@ -6,7 +6,7 @@ resource "kubernetes_namespace" "spark" {
 
 resource "kubernetes_service_account" "spark_sa" {
   metadata {
-    name      = "spark-sa"
+    name      = var.spark_service_account_name
     namespace = kubernetes_namespace.spark.metadata[0].name
 
     annotations = {
@@ -21,7 +21,7 @@ resource "kubernetes_service_account" "spark_sa" {
 
 resource "kubernetes_role" "spark_sa_role" {
   metadata {
-    name      = "spark-sa-role"
+    name      = var.spark_sa_role_name
     namespace = kubernetes_namespace.spark.metadata[0].name
   }
 
@@ -53,7 +53,7 @@ resource "kubernetes_role" "spark_sa_role" {
 
 resource "kubernetes_role_binding" "spark_sa_binding" {
   metadata {
-    name      = "spark-sa-binding"
+    name      = var.spark_sa_role_binding_name
     namespace = kubernetes_namespace.spark.metadata[0].name
   }
 
