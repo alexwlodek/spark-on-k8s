@@ -8,6 +8,12 @@ variable "cluster_version" {
   type        = string
 }
 
+variable "cluster_endpoint_public_access" {
+  description = "Whether the EKS API server endpoint should be publicly accessible."
+  type        = bool
+  default     = true
+}
+
 variable "vpc_id" {
   description = "ID of the VPC where EKS will be created."
   type        = string

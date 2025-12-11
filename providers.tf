@@ -17,6 +17,10 @@ terraform {
   }
 }
 
+provider "aws" {
+  region = var.aws_region
+}
+
 
 # Provider Kubernetes skonfigurowany na EKS
 provider "kubernetes" {

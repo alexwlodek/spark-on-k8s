@@ -34,6 +34,12 @@ variable "cluster_version" {
   default     = "1.30"
 }
 
+variable "cluster_endpoint_public_access" {
+  description = "Whether the EKS API server endpoint should be publicly accessible."
+  type        = bool
+  default     = true
+}
+
 variable "worker_instance_type" {
   description = "Instance type for EKS managed node group."
   type        = string
@@ -151,6 +157,7 @@ variable "jenkins_user" {
 variable "jenkins_password" {
   description = "Jenkins Admin password"
   type = string
+  sensitive = true
 }
 
 variable "jenkins_namespace" {

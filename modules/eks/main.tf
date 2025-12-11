@@ -11,7 +11,7 @@ module "eks" {
 
   enable_irsa = true
 
-  cluster_endpoint_public_access = true
+  cluster_endpoint_public_access = var.cluster_endpoint_public_access
 
   # Prosta, jedna Managed Node Group
   eks_managed_node_group_defaults = {

@@ -5,5 +5,5 @@ output "namespace" {
 
 output "release_name" {
   description = "Spark Operator Helm release name"
-  value       = helm_release.spark_operator.name
+  value       = var.enabled ? helm_release.spark_operator[0].name : null
 }

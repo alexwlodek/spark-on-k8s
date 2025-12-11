@@ -23,6 +23,7 @@ locals {
 }
 
 resource "helm_release" "spark_operator" {
+  count            = var.enabled ? 1 : 0
   name             = var.release_name
   namespace        = var.namespace
   chart            = var.chart_name
@@ -32,6 +33,6 @@ resource "helm_release" "spark_operator" {
 
   # Zamiast set/dynamic set – klasyczne values z yamlencode
   values = [
-    yamlencode(local.base_values)
+    yamlencode(local.merged_values)
   ]
 }

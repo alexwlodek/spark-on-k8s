@@ -22,6 +22,7 @@ module "eks" {
 
   cluster_name    = var.cluster_name
   cluster_version = var.cluster_version
+  cluster_endpoint_public_access = var.cluster_endpoint_public_access
 
   vpc_id             = module.network.vpc_id
   private_subnet_ids = module.network.private_subnet_ids
