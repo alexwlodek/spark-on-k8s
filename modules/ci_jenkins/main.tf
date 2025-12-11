@@ -4,6 +4,17 @@ resource "kubernetes_namespace" "ci" {
   }
 }
 
+locals {
+  persistence_config = merge(
+    {
+      enabled = var.enable_persistence
+      size    = var.persistence_size
+    },
+    var.persistence_storage_class != null ? { storageClass = var.persistence_storage_class } : {}
+  )
+}
+
+
 resource "helm_release" "jenkins" {
   name       = var.release_name
   namespace  = kubernetes_namespace.ci.metadata[0].name
@@ -14,8 +25,18 @@ resource "helm_release" "jenkins" {
   values = [
     # 1. Wczytujemy szablon values i podstawiamy zmienne z Terraform
     templatefile("${path.module}/jenkins-values.tftpl", {
-      namespace    = kubernetes_namespace.ci.metadata[0].name
-      release_name = var.release_name
+      namespace          = kubernetes_namespace.ci.metadata[0].name
+      release_name       = var.release_name
+      install_plugins    = var.jenkins_plugins
+      container_cap      = var.agent_container_cap
+      jnlp_image         = var.jnlp_image
+      kaniko_image       = var.kaniko_image
+      kubectl_image      = var.kubectl_image
+      kaniko_resources   = var.kaniko_resources
+      kubectl_resources  = var.kubectl_resources
+      pipeline_repo_url  = var.pipeline_repo_url
+      pipeline_branch    = var.pipeline_branch
+      pipeline_script_path = var.pipeline_script_path
     }),
 
     # 2. Nadpisujemy specyficzną konfigurację (Admin, Zasoby, ServiceAccount, ENV)
@@ -29,17 +50,9 @@ resource "helm_release" "jenkins" {
 
         serviceType  = var.service_type
         numExecutors = 0
+        
 
-        resources = {
-          requests = {
-            cpu    = "200m"
-            memory = "512Mi"
-          }
-          limits = {
-            cpu    = "500m"
-            memory = "1Gi"
-          }
-        }
+        resources = var.controller_resources
 
         # Wstrzyknięcie tokena jako zmienna środowiskowa do Controllera
         # JCasC (z pliku powyżej) odczyta to jako ${GITHUB_TOKEN}
@@ -61,7 +74,9 @@ resource "helm_release" "jenkins" {
       }
 
       persistence = {
-        enabled = var.enable_persistence
+        enabled      = local.persistence_config.enabled
+        size         = local.persistence_config.size
+        storageClass = lookup(local.persistence_config, "storageClass", null)
       }
     })
   ]

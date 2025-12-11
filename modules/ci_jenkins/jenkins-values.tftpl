@@ -1,16 +1,9 @@
 controller:
   # Instalacja pluginów
   installPlugins:
-    - kubernetes
-    - kubernetes-credentials
-    - workflow-aggregator
-    - git
-    - git-client
-    - configuration-as-code
-    - github
-    - github-branch-source
-    - docker-workflow
-    - job-dsl
+%{ for plugin in install_plugins ~}
+    - ${plugin}
+%{ endfor ~}
 
   # Konfiguracja JCasC
   JCasC:
@@ -26,7 +19,7 @@ controller:
                 namespace: "${namespace}"
                 jenkinsUrl: "http://${release_name}.${namespace}.svc.cluster.local:8080"
                 jenkinsTunnel: "${release_name}-agent.${namespace}.svc.cluster.local:50000"
-                containerCapStr: "10"
+                containerCapStr: "${container_cap}"
                 templates:
                   - name: "spark-builder"
                     label: "spark-builder"
@@ -39,27 +32,29 @@ controller:
                         memory: false
                     containers:
                       - name: "jnlp"
-                        image: "jenkins/inbound-agent:alpine-jdk17"
+                        image: "${jnlp_image}"
                         args: "$${computer.jnlpmac} $${computer.name}"
                         ttyEnabled: true
 
                       - name: "kaniko"
-                        image: "gcr.io/kaniko-project/executor:debug"
+                        image: "${kaniko_image}"
                         command: "/busybox/sh"
-                        args: "-c cat" 
+                        args: "-c cat"
                         ttyEnabled: true
-                        resourceLimitCpu: "500m"
-                        resourceLimitMemory: "1Gi"
-                        resourceRequestCpu: "250m"
-                        resourceRequestMemory: "512Mi"
+                        resourceLimitCpu: "${kaniko_resources.limit_cpu}"
+                        resourceLimitMemory: "${kaniko_resources.limit_memory}"
+                        resourceRequestCpu: "${kaniko_resources.request_cpu}"
+                        resourceRequestMemory: "${kaniko_resources.request_memory}"
 
                       - name: "kubectl"
-                        image: "dtzar/helm-kubectl:latest"
+                        image: "${kubectl_image}"
                         command: "sleep"
                         args: "infinity"
                         ttyEnabled: true
-                        resourceLimitCpu: "200m"
-                        resourceLimitMemory: "256Mi"
+                        resourceLimitCpu: "${kubectl_resources.limit_cpu}"
+                        resourceLimitMemory: "${kubectl_resources.limit_memory}"
+                        resourceRequestCpu: "${kubectl_resources.request_cpu}"
+                        resourceRequestMemory: "${kubectl_resources.request_memory}"
 
       github-credentials: |-
         credentials:
@@ -81,13 +76,13 @@ controller:
                     scm {
                       git {
                         remote{
-                          url('https://github.com/alexwlodek/spark-on-k8s-jobs.git')
+                          url('${pipeline_repo_url}')
                           credentials('github-token')
                         }
-                        branches('*/main')
+                        branches('*/${pipeline_branch}')
                       }
                     }
-                    scriptPath('Jenkinsfile')
-                  }
+                    scriptPath('${pipeline_script_path}')
                 }
+              }
               }
